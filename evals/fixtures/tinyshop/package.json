@@ -1,0 +1,8 @@
+{
+  "name": "tinyshop",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" },
+  "dependencies": { "express": "^4.21.2" },
+  "devDependencies": { "typescript": "^5.6.3", "vitest": "^2.1.8", "@types/express": "^5.0.0" }
+}

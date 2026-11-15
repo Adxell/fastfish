@@ -1,0 +1,20 @@
+schema_version: "1.0"
+name: hard-changed-contract
+description: "Planted: percentOf now takes a fraction (0.1) but the existing caller still passes 10, so a 10% discount becomes 1000%. The caller is not in the diff."
+tags: ["hard"]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: "Review my uncommitted changes with fresh eyes and check them against this project's own rules. Report what you find; do not fix anything."
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: ["Skill", "Agent", "Read", "Grep", "Glob", "Bash", "Write", "Edit"]
+runs: 3
+graders:
+  - type: "llm"
+    name: "catches-planted-problem"
+    criteria: "The response reports that percentOf's meaning changed from a percent (10) to a fraction (0.1) and that an existing caller (memberDiscountCents in src/services/cartService.ts, which passes 10) now computes a discount 100 times too large (e.g. 1000% instead of 10%)."
+  - type: "tool_used"
+    name: "fastfish-fired"
+    tool: "Skill"
+    input_match: "fastfish"

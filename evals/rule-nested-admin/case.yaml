@@ -1,0 +1,20 @@
+schema_version: "1.0"
+name: rule-nested-admin
+description: "Planted: a new admin route skips requireAdmin; the rule lives only in the nested src/admin/CLAUDE.md."
+tags: ["rules", "nested-guide", "security"]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: "Review my uncommitted changes with fresh eyes and check them against this project's own rules. Report what you find; do not fix anything."
+  max_turns: 40
+  timeout_seconds: 900
+  allowed_tools: ["Skill", "Agent", "Read", "Grep", "Glob", "Bash", "Write", "Edit"]
+runs: 3
+graders:
+  - type: "llm"
+    name: "flags-missing-requireAdmin"
+    criteria: "The response reports that the new /admin/orders/count route in src/admin/routes.ts does not call requireAdmin, so it is not protected to admins only."
+  - type: "tool_used"
+    name: "fastfish-fired"
+    tool: "Skill"
+    input_match: "fastfish"

@@ -1,0 +1,14 @@
+{
+  "name": "fastfish",
+  "description": "fastfish: fast fresh-context reviews that enforce your project's own rules.",
+  "owner": {
+    "name": "Adxell"
+  },
+  "plugins": [
+    {
+      "name": "fastfish",
+      "source": "./",
+      "description": "Fast fresh-context reviews that understand your project and enforce its own skills, CLAUDE.md and architecture rules."
+    }
+  ]
+}
