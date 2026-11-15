@@ -35,6 +35,37 @@ Start a new session afterwards. Requires `python3` (stdlib only) and works best 
 | `/fastfish:check [path...]` | Rules-only check: does this follow the project's architecture and how-to-code guides? |
 | `/fastfish:map [--force] [notes]` | Rebuild the project map, or add team notes the scan cannot detect. |
 
+## Starting a new project
+
+fastfish is installed per user, so it works in any new project straight away. What matters is giving the goldfish rules to enforce: `rules-fish` only checks what is written down.
+
+1. **Create the repo.** fastfish uses git to find what changed.
+
+   ```sh
+   mkdir ~/projects/my-app && cd ~/projects/my-app
+   git init
+   claude
+   ```
+
+2. **Write the rules before the code.** Add a root `CLAUDE.md` with the stack, the folder layout, the commands and the rules that apply everywhere. Put area-specific rules in scoped skills, for example `.claude/skills/backend/SKILL.md`:
+
+   ```markdown
+   ---
+   name: backend-architecture
+   description: Layering rules for the API.
+   paths: ["internal/**", "cmd/**"]
+   ---
+   Handlers never touch storage directly; they go through a service.
+   ```
+
+   A skill with `paths:` is only checked when a changed file matches, so reviews stay focused.
+
+3. **Review the design first.** Write the plan in `docs/design.md` and run `/fastfish:review docs/design.md`. Gaps in a plan are cheaper to fix than gaps in code.
+
+4. **Build in small steps.** Ask Claude for one piece, run `/fastfish:review` (or `/fastfish:check` for rules only), fix what it finds, commit, repeat. Use `/fastfish:review --deep` before big merges.
+
+5. **Keep the map honest.** The map rebuilds itself when files or guides change. Add facts the scan cannot see with `/fastfish:map <note>`, and run `/fastfish:map --force` if it looks stale.
+
 ## The goldfish
 
 | Agent | Looks for |
