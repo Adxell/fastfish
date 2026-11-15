@@ -1,7 +1,7 @@
 {
   "name": "fastfish",
   "displayName": "fastfish",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fast fresh-context reviews that understand your project and enforce its own skills, CLAUDE.md and architecture rules.",
   "author": {
     "name": "Adxell"

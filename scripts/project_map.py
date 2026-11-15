@@ -220,6 +220,9 @@ def guide_kind(path: str) -> str | None:
     name = p.rsplit("/", 1)[-1]
     if re.search(r"(^|/)\.claude/skills/[^/]+/skill\.md$", p) or re.search(r"(^|/)\.agents/skills/[^/]+/skill\.md$", p):
         return "skill"
+    if re.search(r"(^|/)\.(claude|agents)/skills/[^/]+/.+", p):
+        # Reference files inside a skill belong to that skill and share its scope.
+        return None
     if re.search(r"(^|/)\.claude/agents/[^/]+\.md$", p):
         return "agent"
     if re.search(r"(^|/)\.claude/commands/.+\.md$", p):
