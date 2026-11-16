@@ -1,11 +1,11 @@
 {
   "name": "fastfish",
   "displayName": "fastfish",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Fast fresh-context reviews that understand your project and enforce its own skills, CLAUDE.md and architecture rules.",
   "author": {
     "name": "Adxell"
   },
   "license": "Apache-2.0",
-  "keywords": ["code-review", "design-review", "conventions", "architecture", "goldfish"]
+  "keywords": ["code-review", "design-review", "conventions", "architecture", "goldfish", "kubernetes", "agents"]
 }

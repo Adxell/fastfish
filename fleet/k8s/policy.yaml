@@ -1,0 +1,70 @@
+# Applied by `ff setup` into the agent namespace (no namespace: field on purpose).
+# Tune the quota to your server: it caps how many agents run at once and what they may use.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ff-agents
+  labels:
+    app: ff-agent
+spec:
+  hard:
+    pods: "8"
+    requests.cpu: "6"
+    requests.memory: 12Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ff-agents
+  labels:
+    app: ff-agent
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "2"
+        memory: 4Gi
+      defaultRequest:
+        cpu: 500m
+        memory: 1Gi
+---
+# Agents accept no inbound traffic and may only reach DNS and HTTPS on the public
+# internet (Anthropic API, GitHub, npm, ntfy). Private ranges, including the cluster,
+# your LAN and the fastnet/Tailscale CGNAT range (100.64.0.0/10), are blocked. If your git server lives on the
+# LAN, add its address as an extra egress rule.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ff-agents
+  labels:
+    app: ff-agent
+spec:
+  podSelector:
+    matchLabels:
+      app: ff-agent
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - { protocol: TCP, port: 443 }
