@@ -41,6 +41,11 @@ tailscale ip -4             # the server's private address, e.g. 100.64.0.1
 curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 600 \
   --tls-san "$(tailscale ip -4)" --tls-san homelab.fastnet.internal
 sudo k3s kubectl get nodes
+
+# let your own user run kubectl and ff (k3s's kubectl reads a root-only file unless KUBECONFIG is set)
+mkdir -p ~/.kube && sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config && chmod 600 ~/.kube/config
+echo 'export KUBECONFIG=$HOME/.kube/config' >> ~/.bashrc && export KUBECONFIG=$HOME/.kube/config
+kubectl get nodes
 ```
 
 Then follow fastnet's "Lock down the server" section, so port 6443 (the Kubernetes API) and SSH are reachable only over fastnet.
