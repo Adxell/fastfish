@@ -18,6 +18,14 @@ Run many Claude Code agents on your own server under Kubernetes, and control the
                                                      └─ HTTPS only → Anthropic API, GitHub
 ```
 
+## Before you start
+
+You need:
+- **A Linux server** (Debian 12+ / Ubuntu 22.04+) with 4+ cores and 8+ GB RAM, reachable from the internet (public IP or router port forwards). Set it up with fastnet first by following its [getting-started guide](https://github.com/Adxell/fastnet/blob/main/docs/getting-started.md).
+- **Claude access**: a Claude Pro/Max plan (for `claude setup-token`) or an Anthropic API key.
+- **A GitHub fine-grained token** with Contents + Pull requests read/write on the repos agents may touch.
+- **On each machine you control the fleet from**: `kubectl` and `python3`. From a phone or a borrowed computer you need only a browser: use fastnet's browser terminal.
+
 ## 1. Server setup (once)
 
 On the server (Linux, 4+ cores and 8+ GB RAM recommended):
@@ -25,7 +33,8 @@ On the server (Linux, 4+ cores and 8+ GB RAM recommended):
 ```sh
 # fastnet: your self-hosted private network (see its README for ports and options)
 git clone https://github.com/Adxell/fastnet.git
-sudo ./fastnet/server/install.sh --host <public IP or DNS name> --name homelab
+sudo ./fastnet/server/install.sh --host <public IP or DNS name> --name homelab \
+  --web-terminal <your domain>   # optional: 2FA browser terminal for phones and any browser
 tailscale ip -4             # the server's private address, e.g. 100.64.0.1
 
 # k3s: a small Kubernetes; the TLS names let you reach the API over fastnet
