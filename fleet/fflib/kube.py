@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,10 @@ class Kube:
     def __init__(self, namespace: str, context: str = "") -> None:
         if not shutil.which("kubectl"):
             raise KubeError("kubectl not found on PATH. Install it and point your kubeconfig at the server.")
+        # k3s's kubectl falls back to the root-only /etc/rancher/k3s/k3s.yaml, not ~/.kube/config
+        default = os.path.expanduser("~/.kube/config")
+        if not os.environ.get("KUBECONFIG") and os.path.isfile(default):
+            os.environ["KUBECONFIG"] = default
         self.namespace = namespace
         self.base = ["kubectl"] + (["--context", context] if context else [])
 
