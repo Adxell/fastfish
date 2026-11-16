@@ -106,8 +106,21 @@ log "agent $NAME ($MODE) cloning $REPO"
 cd /work || fail "/work missing"
 git clone -q "$REPO" repo || fail "git clone failed (private repo without GH_TOKEN?)"
 cd repo
-BASE="${BASE:-$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's#^origin/##')}"
-git checkout -q "$BASE" || fail "base branch $BASE not found"
+if [ -z "${BASE:-}" ]; then
+  BASE=$(git symbolic-ref --short -q refs/remotes/origin/HEAD | sed 's#^origin/##' || true)
+  BASE=${BASE:-main}
+fi
+if [ -z "$(git branch -r)" ]; then
+  # Empty repository: give it a first (empty) commit on the base branch, so the agent's branch
+  # has something to start from and a PR has something to merge into.
+  [ "$MODE" != review ] || fail "the repository is empty: nothing to review"
+  log "empty repository: creating $BASE with an empty first commit"
+  git symbolic-ref HEAD "refs/heads/$BASE"
+  git commit -q --allow-empty -m "Initial commit"
+  git push -q -u origin "$BASE" || fail "could not push the first commit to $BASE (does GH_TOKEN have write access?)" 3
+else
+  git checkout -q "$BASE" || fail "base branch $BASE not found"
+fi
 
 # ---------------------------------------------------------------- modes
 
