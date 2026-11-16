@@ -1,0 +1,7 @@
+*
+!.claude-plugin
+!agents
+!skills
+!scripts
+!fleet/image/agent-run.sh
+**/__pycache__

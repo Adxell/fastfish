@@ -34,6 +34,21 @@ Start a new session afterwards. Requires `python3` (stdlib only) and works best 
 | `/fastfish:review --deep` | All lenses plus a second design reviewer arguing for a simpler design. |
 | `/fastfish:check [path...]` | Rules-only check: does this follow the project's architecture and how-to-code guides? |
 | `/fastfish:map [--force] [notes]` | Rebuild the project map, or add team notes the scan cannot detect. |
+| `/fastfish:fleet [request]` | Start, list, inspect and stop agents running on your Kubernetes server (see below). |
+
+## Fleet: run agents on your own server
+
+`fleet/` runs many Claude Code agents as Kubernetes Jobs on your own server and lets you control them all from a terminal, from anywhere over Tailscale:
+
+```sh
+ff run "Add rate limiting to POST /login; npm test must pass" --repo https://github.com/you/app.git --pr
+ff review --branch feature/cart      # a fastfish review, run in the cluster
+ff chat                              # interactive agent in tmux; detach and reattach any time
+ff ls -w                             # live status, branches, PRs and cost of every agent
+ff logs -f <name>  ·  ff attach <name>  ·  ff send <name> "..."  ·  ff stop <name>
+```
+
+Each agent works on its own branch `ff/<name>` in a locked-down pod (non-root, no cluster access, HTTPS-only egress). Server and client setup, security model and troubleshooting: [fleet/README.md](fleet/README.md).
 
 ## Starting a new project
 
@@ -113,6 +128,7 @@ Controllers never call repositories directly; go through a service. ...
 ```
 .claude-plugin/   plugin.json, marketplace.json
 agents/           design-fish.md, code-fish.md, rules-fish.md
-skills/           review/, check/, map/
+skills/           review/, check/, map/, fleet/
 scripts/          project_map.py
+fleet/            ff CLI, fflib/, agent image, Kubernetes manifests, tests
 ```
