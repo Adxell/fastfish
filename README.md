@@ -38,7 +38,7 @@ Start a new session afterwards. Requires `python3` (stdlib only) and works best 
 
 ## Fleet: run agents on your own server
 
-`fleet/` runs many Claude Code agents as Kubernetes Jobs on your own server and lets you control them all from a terminal, from anywhere over Tailscale:
+`fleet/` runs many Claude Code agents as Kubernetes Jobs on your own server and lets you control them all from a terminal, from anywhere over [fastnet](https://github.com/Adxell/fastnet), a self-hosted open-source private network:
 
 ```sh
 ff run "Add rate limiting to POST /login; npm test must pass" --repo https://github.com/you/app.git --pr

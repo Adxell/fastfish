@@ -5,13 +5,13 @@ Run many Claude Code agents on your own server under Kubernetes, and control the
 - Every agent is a Kubernetes **Job**: it clones your repo, works on its own branch `ff/<name>`, pushes it and, if asked, opens a PR.
 - Three kinds of agent: **task** (headless, `ff run`), **review** (a fastfish review, `ff review`) and **interactive** (a Claude Code session inside tmux that you can attach to and detach from, `ff chat`).
 - `ff` is a small Python CLI (stdlib only) that wraps `kubectl`. It works from any machine with a kubeconfig for the cluster.
-- Remote access goes over **Tailscale**, so the cluster has no public ports.
+- Remote access goes over **[fastnet](https://github.com/Adxell/fastnet)**, a self-hosted, open-source private network (Headscale + the open-source Tailscale client) that runs on the same server. No outside company sits in the middle, and the Kubernetes API is never exposed publicly.
 
 ```
  laptop / other PC ──┐                    ┌───────────── your server (k3s) ─────────────┐
-   ff ls, ff run …   ├── Tailscale (VPN) ─┤ kube-apiserver                               │
- phone (SSH app) ────┘                    │   namespace fastfish-agents                  │
-   ssh server → ff …                      │     Job ff-fix-login  → pod: claude -p …     │
+   ff ls, ff run …   ├── fastnet (VPN) ───┤ kube-apiserver                               │
+ phone (browser) ────┘                    │   namespace fastfish-agents                  │
+   web terminal → ff …                    │     Job ff-fix-login  → pod: claude -p …     │
                                           │     Job ff-review-x   → pod: /fastfish:review│
                                           │     Job ff-chat-1     → pod: tmux + claude   │
                                           └──────────┬───────────────────────────────────┘
@@ -23,15 +23,18 @@ Run many Claude Code agents on your own server under Kubernetes, and control the
 On the server (Linux, 4+ cores and 8+ GB RAM recommended):
 
 ```sh
-# Tailscale: puts the server on your private network
-curl -fsSL https://tailscale.com/install.sh | sh
-sudo tailscale up
-tailscale status            # note the server's name, e.g. "homelab"
+# fastnet: your self-hosted private network (see its README for ports and options)
+git clone https://github.com/Adxell/fastnet.git
+sudo ./fastnet/server/install.sh --host <public IP or DNS name> --name homelab
+tailscale ip -4             # the server's private address, e.g. 100.64.0.1
 
-# k3s: a small Kubernetes; the TLS name lets you reach the API over Tailscale
-curl -sfL https://get.k3s.io | sh -s - --tls-san homelab --write-kubeconfig-mode 600
+# k3s: a small Kubernetes; the TLS names let you reach the API over fastnet
+curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 600 \
+  --tls-san "$(tailscale ip -4)" --tls-san homelab.fastnet.internal
 sudo k3s kubectl get nodes
 ```
+
+Then follow fastnet's "Lock down the server" section, so port 6443 (the Kubernetes API) and SSH are reachable only over fastnet.
 
 k3s ships with a NetworkPolicy controller, so the agent network rules in `k8s/policy.yaml` are enforced.
 
@@ -48,12 +51,13 @@ Without Docker, use `nerdctl` or push the image to a registry you control and se
 ## 2. Client setup (each machine you control the fleet from)
 
 ```sh
-# 1. Join the same tailnet
-sudo tailscale up
+# 1. Join fastnet: on the server run `sudo fastnet add laptop`, then on this machine:
+scp you@<server>:fastnet-invites/laptop.sh . && sudo bash laptop.sh
 
-# 2. Copy the kubeconfig from the server and point it at the Tailscale name
+# 2. Copy the kubeconfig from the server and point it at the server's fastnet address
 mkdir -p ~/.kube
-ssh homelab sudo cat /etc/rancher/k3s/k3s.yaml | sed 's/127.0.0.1/homelab/' > ~/.kube/config
+SERVER=100.64.0.1   # `tailscale ip -4` on the server
+ssh "$SERVER" sudo cat /etc/rancher/k3s/k3s.yaml | sed "s/127.0.0.1/$SERVER/" > ~/.kube/config
 chmod 600 ~/.kube/config
 kubectl get nodes
 
@@ -77,9 +81,11 @@ It creates the namespace, the agent service account, the quota and the network p
 
 Values are read from the environment if set, otherwise prompted without echo, and sent to the cluster through stdin. They never appear in the Job manifest, on the command line or in logs.
 
-### From a phone
+### From a phone or any browser
 
-Install an SSH app (Termius, Blink, JuiceSSH) and the Tailscale app. SSH into the server, set up `ff` there the same way (its kubeconfig is `/etc/rancher/k3s/k3s.yaml`), and run `ff ls`, `ff logs -f …`, `ff attach …` as usual. tmux makes interactive agents survive a dropped mobile connection.
+Install fastnet with `--web-terminal <domain>` (see its README). Then open `https://<domain>:9090` on any phone or computer, sign in with your username, password and one-time code, and click **Terminal**. Nothing needs to be installed on the phone.
+
+On the server, set up `ff` once for your user (its kubeconfig is `/etc/rancher/k3s/k3s.yaml`). Then `ff ls`, `ff logs -f …` and `ff attach …` work there as usual. Run `tmux new -A -s work` first, so your session survives a closed tab or a dropped mobile connection, and you can pick it up from your PC with `ssh` + the same command.
 
 ## 3. Using it
 
@@ -135,7 +141,7 @@ Agents skip permission prompts because nobody is there to answer them. The pod i
 
 - runs as a non-root user with all capabilities dropped and no privilege escalation;
 - has no Kubernetes API token (`automountServiceAccountToken: false`, and the service account has no roles);
-- can reach only DNS and HTTPS on the public internet: no cluster services, no LAN, no tailnet;
+- can reach only DNS and HTTPS on the public internet: no cluster services, no LAN, no fastnet devices;
 - is limited by CPU/memory limits, a namespace quota (8 pods by default) and a timeout;
 - works on its own branch; it never pushes to the base branch unless the token allows it and the prompt asks for it, so protect your main branch on GitHub.
 

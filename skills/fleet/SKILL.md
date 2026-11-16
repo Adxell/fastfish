@@ -19,7 +19,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/fleet/ff" <command> ...
 
 !`python3 "${CLAUDE_PLUGIN_ROOT}/fleet/ff" ls 2>&1 | head -40`
 
-If that block shows an error about kubectl or the cluster, tell the user the cluster is not reachable from this machine, show the error, and point them to `fleet/README.md` (Tailscale up? kubeconfig context? `ff setup` done?). Stop.
+If that block shows an error about kubectl or the cluster, tell the user the cluster is not reachable from this machine, show the error, and point them to `fleet/README.md` (connected to fastnet — `tailscale status`? kubeconfig context? `ff setup` done?). Stop.
 
 ## Mapping requests to commands
 

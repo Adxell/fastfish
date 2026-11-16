@@ -32,7 +32,7 @@ spec:
 ---
 # Agents accept no inbound traffic and may only reach DNS and HTTPS on the public
 # internet (Anthropic API, GitHub, npm, ntfy). Private ranges, including the cluster,
-# your LAN and the Tailscale CGNAT range, are blocked. If your git server lives on the
+# your LAN and the fastnet/Tailscale CGNAT range (100.64.0.0/10), are blocked. If your git server lives on the
 # LAN, add its address as an extra egress rule.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
